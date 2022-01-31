@@ -1,0 +1,81 @@
+namespace AutoMappingCodeFixTest
+{
+    using System;
+    using System.Linq;
+    using System.Collections.Generic;
+
+    public class Target
+    {
+        public string TestString { get; set; }
+
+        public int TestInt { get; set; }
+
+        public TargetChild TestChild { get; set; }
+
+        public List<TargetChild> TestChildren { get; set; }
+
+        public List<int> TestChildrenSimpleType { get; set; }
+
+        public string UnmappedProp { get; set; }
+
+        public int TestIntNullable { get; set; }
+    }
+
+    public class TargetChild
+    {
+        public string TestString { get; set; }
+
+        public int TestInt { get; set; }
+
+        public string UnmappedProp { get; set; }
+    }
+
+    public class Source
+    {
+        public string TestString { get; set; }
+
+        public int TestInt { get; set; }
+
+        public SourceChild TestChild { get; set; }
+
+        public List<SourceChild> TestChildren { get; set; }
+
+        public List<int> TestChildrenSimpleType { get; set; }
+
+        public int? TestIntNullable { get; set; }
+    }
+
+    public class SourceChild
+    {
+        public string TestString { get; set; }
+
+        public int TestInt { get; set; }
+    }
+
+    public static class Mapper
+    {
+        public static Target Map(Source source)
+        {
+            //source.TestChild: UnmappedProp could not be matched
+            //sourcechildItem: UnmappedProp could not be matched
+            //source: UnmappedProp could not be matched
+            return new Target
+            {
+                TestString = source.TestString,
+                TestInt = source.TestInt,
+                TestChild = new TargetChild
+                {
+                    TestString = source.TestChild.TestString,
+                    TestInt = source.TestChild.TestInt
+                },
+                TestChildren = source.TestChildren.Select(sourcechildItem => new TargetChild
+                {
+                    TestString = sourcechildItem.TestString,
+                    TestInt = sourcechildItem.TestInt
+                }).ToList(),
+                TestChildrenSimpleType = source.TestChildrenSimpleType,
+                TestIntNullable = source.TestIntNullable ?? throw new ArgumentNullException(nameof(source.TestIntNullable))
+            };
+        }
+    }
+}

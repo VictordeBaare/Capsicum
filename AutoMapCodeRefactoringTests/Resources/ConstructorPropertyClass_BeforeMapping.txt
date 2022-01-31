@@ -1,0 +1,90 @@
+namespace AutoMappingCodeFixTest
+{
+    using System;
+    using System.Linq;
+    using System.Collections.Generic;
+
+    public class Target
+    {
+        public Target(string testString, int testInt, TargetChild testChild, List<TargetChild> testChildren, List<int> testChildrenSimpleType, int? testIntNullable)
+        {
+            TestString = testString;
+            TestInt = testInt;
+            TestChild = testChild;
+            TestChildren = testChildren;
+            TestChildrenSimpleType = testChildrenSimpleType;
+            TestIntNullable = testIntNullable;
+        }
+
+        public string TestString { get; }
+
+        public int TestInt { get; }
+
+        public TargetChild TestChild { get; }
+
+        public List<TargetChild> TestChildren { get; }
+
+        public List<int> TestChildrenSimpleType { get; }
+
+        public int? TestIntNullable { get; }
+    }
+
+    public class TargetChild
+    {
+        public TargetChild(string testString, int testInt)
+        {
+            TestString = testString;
+            TestInt = testInt;
+        }
+        
+        public string TestString { get; }
+
+        public int TestInt { get; }
+    }
+
+    public class Source
+    {
+        public Source(string testString, int testInt, SourceChild testChild, List<SourceChild> testChildren, List<int> testChildrenSimpleType, int? testIntNullable)
+        {
+            TestString = testString;
+            TestInt = testInt;
+            TestChild = testChild;
+            TestChildren = testChildren;
+            TestChildrenSimpleType = testChildrenSimpleType;
+            TestIntNullable = testIntNullable;
+        }
+
+        public string TestString { get; }
+
+        public int TestInt { get; }
+
+        public SourceChild TestChild { get; }
+
+        public List<SourceChild> TestChildren { get; }
+
+        public List<int> TestChildrenSimpleType { get; }
+
+        public int? TestIntNullable { get; }
+    }
+
+    public class SourceChild
+    {
+        public SourceChild(string testString, int testInt)
+        {
+            TestString = testString;
+            TestInt = testInt;
+        }
+
+        public string TestString { get; }
+
+        public int TestInt { get; }
+    }
+
+    public static class Mapper
+    {
+        public static Target [|Map|](Source source)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

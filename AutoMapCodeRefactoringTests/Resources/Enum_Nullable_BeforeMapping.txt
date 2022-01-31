@@ -1,0 +1,26 @@
+namespace AutoMappingCodeFixTest
+{
+    using System;
+
+    public enum SourceEnum {
+        None = 0,
+        Item1 = 1,
+        Item2 = 2,
+        Item3 = 3
+    }
+
+    public enum TargetEnum {
+        None = 0,
+        Item1 = 1,
+        Item2 = 2,
+        Item3 = 3
+    }
+
+    public static class EnumMapper
+    {
+        public static TargetEnum? [|Map|](SourceEnum? item) 
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

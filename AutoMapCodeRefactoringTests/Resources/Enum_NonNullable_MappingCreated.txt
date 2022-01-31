@@ -1,0 +1,38 @@
+namespace AutoMappingCodeFixTest
+{
+    using System;
+
+    public enum SourceEnum {
+        None = 0,
+        Item1 = 1,
+        Item2 = 2,
+        Item3 = 3
+    }
+
+    public enum TargetEnum {
+        None = 0,
+        Item1 = 1,
+        Item2 = 2,
+        Item3 = 3
+    }
+
+    public static class EnumMapper
+    {
+        public static TargetEnum Map(SourceEnum item)
+        {
+            switch (item)
+            {
+                case SourceEnum.None:
+                    return TargetEnum.None;
+                case SourceEnum.Item1:
+                    return TargetEnum.Item1;
+                case SourceEnum.Item2:
+                    return TargetEnum.Item2;
+                case SourceEnum.Item3:
+                    return TargetEnum.Item3;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(item));
+            }
+        }
+    }
+}
