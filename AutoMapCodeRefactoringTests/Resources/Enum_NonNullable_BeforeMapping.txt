@@ -6,14 +6,16 @@ namespace AutoMappingCodeFixTest
         None = 0,
         Item1 = 1,
         Item2 = 2,
-        Item3 = 3
+        Item3 = 3,
+        DifferentNameSameValue = 4
     }
 
     public enum TargetEnum {
         None = 0,
         Item1 = 1,
         Item2 = 2,
-        Item3 = 3
+        Item3 = 3,
+        Item4 = 4
     }
 
     public static class EnumMapper

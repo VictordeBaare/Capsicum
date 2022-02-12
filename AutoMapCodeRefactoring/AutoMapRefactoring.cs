@@ -199,7 +199,7 @@
         /// Default is an exception statement.
         /// </summary>
         /// <param name="inputEnumMembers"></param>
-        /// <param name="returnTypeEnumMebers"></param>
+        /// <param name="returnTypeEnumMembers"></param>
         /// <param name="inputParamaterSyntax"></param>
         /// <param name="inputParameter"></param>
         /// <param name="returnType"></param>
@@ -207,7 +207,7 @@
         /// <returns></returns>
         private static IEnumerable<SwitchSectionSyntax> GetSectionsForSwitchStatement(
             IList<IFieldSymbol> inputEnumMembers,
-            IList<IFieldSymbol> returnTypeEnumMebers,
+            IList<IFieldSymbol> returnTypeEnumMembers,
             ExpressionSyntax inputParamaterSyntax,
             ITypeSymbol inputParameter,
             ITypeSymbol returnType,
@@ -219,8 +219,9 @@
 
             foreach (var inputParameterEnumMember in inputEnumMembers)
             {
-                var matchingTarget = returnTypeEnumMebers.SingleOrDefault(x =>
-                    x.Name.Equals(inputParameterEnumMember.Name, StringComparison.CurrentCultureIgnoreCase));
+                var matchingTarget = returnTypeEnumMembers.SingleOrDefault(x =>
+                    x.Name.Equals(inputParameterEnumMember.Name, StringComparison.CurrentCultureIgnoreCase) ||
+                    (x.ConstantValue != null && x.ConstantValue.Equals(inputParameterEnumMember.ConstantValue)));
 
                 if (matchingTarget != null)
                 {
@@ -237,6 +238,11 @@
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     identifierNameReturnType,
                                     SyntaxFactory.IdentifierName(matchingTarget.Name))))));
+
+                    if (!matchingTarget.Name.Equals(inputParameterEnumMember.Name, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        comments.Add($"EnumMember: {inputParameterEnumMember.Name} differs in name but has the same value.");
+                    }
                 }
                 else
                 {

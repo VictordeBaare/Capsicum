@@ -6,20 +6,23 @@ namespace AutoMappingCodeFixTest
         None = 0,
         Item1 = 1,
         Item2 = 2,
-        Item3 = 3
+        Item3 = 3,
+        DifferentNameSameValue = 4
     }
 
     public enum TargetEnum {
         None = 0,
         Item1 = 1,
         Item2 = 2,
-        Item3 = 3
+        Item3 = 3,
+        Item4 = 4
     }
 
     public static class EnumMapper
     {
         public static TargetEnum Map(SourceEnum item)
         {
+            //EnumMember: DifferentNameSameValue differs in name but has the same value.
             switch (item)
             {
                 case SourceEnum.None:
@@ -30,6 +33,8 @@ namespace AutoMappingCodeFixTest
                     return TargetEnum.Item2;
                 case SourceEnum.Item3:
                     return TargetEnum.Item3;
+                case SourceEnum.DifferentNameSameValue:
+                    return TargetEnum.Item4;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(item));
             }
