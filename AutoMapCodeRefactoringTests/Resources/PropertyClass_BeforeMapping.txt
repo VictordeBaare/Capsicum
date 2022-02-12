@@ -10,6 +10,8 @@ namespace AutoMappingCodeFixTest
 
         public int TestInt { get; set; }
 
+        public TargetEnum TestEnum { get; set; }
+
         public TargetChild TestChild { get; set; }
 
         public List<TargetChild> TestChildren { get; set; }
@@ -19,6 +21,12 @@ namespace AutoMappingCodeFixTest
         public string UnmappedProp { get; set; }
 
         public int TestIntNullable { get; set; }
+    }
+
+    public enum TargetEnum 
+    {
+        None = 0,
+        Test = 1
     }
 
     public class TargetChild
@@ -36,6 +44,8 @@ namespace AutoMappingCodeFixTest
 
         public int TestInt { get; set; }
 
+        public SourceEnum TestEnum { get; set; }
+
         public SourceChild TestChild { get; set; }
 
         public List<SourceChild> TestChildren { get; set; }
@@ -43,6 +53,12 @@ namespace AutoMappingCodeFixTest
         public List<int> TestChildrenSimpleType { get; set; }
 
         public int? TestIntNullable { get; set; }
+    }
+
+    public enum SourceEnum 
+    {
+        None = 0,
+        Test = 1
     }
 
     public class SourceChild

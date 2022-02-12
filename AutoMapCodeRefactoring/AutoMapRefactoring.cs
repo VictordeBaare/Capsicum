@@ -65,30 +65,35 @@
 
             var returnType = declaredMethodSymbol.ReturnType;
             var inputParameter = declaredMethodSymbol.Parameters[0];
-            var comments = new List<string>();
-            StatementSyntax statement;
+            PotentialStatementTree statement;
 
             // If both types are enums we will do an enum mapping based on a switch statement.
             // The switch statement is used because it is explicit.
             if (returnType.IsEnum() && inputParameter.Type.IsEnum())
             {
-                statement = CreateEnumSwitchStatementMapping(inputParameter, returnType, ref comments);
+                statement = CreateEnumSwitchStatementMapping(inputParameter, returnType);
             }
             //Type is not an enum but a object or list.
             else
             {
-                statement = CreateNewObjectWithMapping(syntaxGenerator, inputParameter, returnType, ref comments);
+                statement = CreateNewObjectWithMapping(syntaxGenerator, inputParameter, returnType);
             }
-            //Add the comments before the mapping.
-            statement = statement
-                .WithLeadingTrivia(SyntaxFactory.TriviaList(CreateCommentList(comments)))
-                .WithAdditionalAnnotations(Formatter.Annotation);
 
-            var newBlock = SyntaxFactory.Block(statement).WithAdditionalAnnotations(Formatter.Annotation);
-
-            var newRoot = syntaxRoot.ReplaceNode(methodDeclaration, methodDeclaration.WithBody(newBlock).WithExpressionBody(null).WithSemicolonToken(default));
+            var newBlock = SyntaxFactory.Block(statement.Root).WithAdditionalAnnotations(Formatter.Annotation);
+            var newMethod = methodDeclaration.WithBody(newBlock).WithExpressionBody(null).WithSemicolonToken(default);
+            
+            var list = new List<MethodDeclarationSyntax> { newMethod }.Concat(statement.ExtraStatements);
+            
+            var newRoot = syntaxRoot.ReplaceNode(methodDeclaration, list);
 
             return contextDocument.WithSyntaxRoot(newRoot);
+        }
+
+        private static StatementSyntax AddCommentsToStatement(StatementSyntax statement, List<string> comments)
+        {
+            //Add the comments before the mapping.
+            return statement.WithLeadingTrivia(SyntaxFactory.TriviaList(CreateCommentList(comments)))
+                            .WithAdditionalAnnotations(Formatter.Annotation);
         }
 
         /// <summary>
@@ -99,15 +104,23 @@
         /// <param name="returnType"></param>
         /// <param name="comments"></param>
         /// <returns></returns>
-        private static StatementSyntax CreateNewObjectWithMapping(
+        private static PotentialStatementTree CreateNewObjectWithMapping(
             SyntaxGenerator syntaxGenerator,
             IParameterSymbol inputParameter,
-            ITypeSymbol returnType,
-            ref List<string> comments)
+            ITypeSymbol returnType)
         {
-            var expression = GetExpressionSyntax(syntaxGenerator, inputParameter.Type, returnType,
-                (ExpressionSyntax)syntaxGenerator.IdentifierName(inputParameter.Name), ref comments);
-            return (StatementSyntax)syntaxGenerator.ReturnStatement(expression);
+            var otherMethods = new List<MethodDeclarationSyntax>();
+            var comments = new List<string>();
+            var expression = GetExpressionSyntax(syntaxGenerator,
+                inputParameter.Type,
+                returnType,
+                (ExpressionSyntax)syntaxGenerator.IdentifierName(inputParameter.Name),
+                ref otherMethods,
+                ref comments);
+
+            var statement = (StatementSyntax)syntaxGenerator.ReturnStatement(expression);
+            statement = AddCommentsToStatement(statement, comments);
+            return new PotentialStatementTree(statement, otherMethods);
         }
 
         /// <summary>
@@ -115,17 +128,20 @@
         /// </summary>
         /// <param name="inputParameter"></param>
         /// <param name="returnType"></param>
-        /// <param name="comments"></param>
+        /// <param name="identifier"></param>
         /// <returns></returns>
-        private static StatementSyntax CreateEnumSwitchStatementMapping(
-            IParameterSymbol inputParameter,
+        private static PotentialStatementTree CreateEnumSwitchStatementMapping(
+            ITypeSymbol inputParameter,
             ITypeSymbol returnType,
-            ref List<string> comments)
+            string identifier)
         {
-            var identifierInputParameterName = SyntaxFactory.IdentifierName(inputParameter.Name);
-            var enumMembersInputParameter = GetEnumMembers(inputParameter.Type.GetUnderlyingType());
+            var comments = new List<string>();
+
+            var identifierInputParameterName = SyntaxFactory.IdentifierName(identifier);
+
+            var enumMembersInputParameter = GetEnumMembers(inputParameter.GetUnderlyingType());
             var enumMembersReturnType = GetEnumMembers(returnType.GetUnderlyingType());
-            return SyntaxFactory
+            var statement = (StatementSyntax)SyntaxFactory
                 .SwitchStatement(identifierInputParameterName)
                 .WithSections(SyntaxFactory.List(GetSectionsForSwitchStatement(
                     enumMembersInputParameter,
@@ -134,6 +150,22 @@
                     inputParameter,
                     returnType,
                     ref comments)));
+            statement = AddCommentsToStatement(statement, comments);
+
+            return new PotentialStatementTree(statement);
+        }
+
+        /// <summary>
+        /// Base for the switch statement for the enum mapping.
+        /// </summary>
+        /// <param name="inputParameter"></param>
+        /// <param name="returnType"></param>
+        /// <returns></returns>
+        private static PotentialStatementTree CreateEnumSwitchStatementMapping(
+            IParameterSymbol inputParameter,
+            ITypeSymbol returnType)
+        {
+            return CreateEnumSwitchStatementMapping(inputParameter.Type, returnType, inputParameter.Name);
         }
 
         /// <summary>
@@ -177,12 +209,12 @@
             IList<IFieldSymbol> inputEnumMembers,
             IList<IFieldSymbol> returnTypeEnumMebers,
             ExpressionSyntax inputParamaterSyntax,
-            IParameterSymbol inputParameter,
+            ITypeSymbol inputParameter,
             ITypeSymbol returnType,
             ref List<string> comments)
         {
             var syntaxes = new List<SwitchSectionSyntax>();
-            var identifierNameInputParameterType = SyntaxFactory.IdentifierName(inputParameter.Type.GetUnderlyingType().Name);
+            var identifierNameInputParameterType = SyntaxFactory.IdentifierName(inputParameter.GetUnderlyingType().Name);
             var identifierNameReturnType = SyntaxFactory.IdentifierName(returnType.GetUnderlyingType().Name);
 
             foreach (var inputParameterEnumMember in inputEnumMembers)
@@ -212,7 +244,7 @@
                 }
             }
 
-            if (returnType.IsNullable() && inputParameter.Type.IsNullable())
+            if (returnType.IsNullable() && inputParameter.IsNullable())
             {
                 syntaxes.Add(SyntaxFactory.SwitchSection()
                     .WithLabels(SyntaxFactory.SingletonList<SwitchLabelSyntax>(
@@ -252,12 +284,24 @@
         /// <param name="expression">Expression, in the first call this is the source identifier name. In other words the base from which we will start our mapping.</param>
         /// <param name="comments"></param>
         /// <returns></returns>
-        private static ExpressionSyntax GetExpressionSyntax(SyntaxGenerator syntaxGenerator, ITypeSymbol source, ITypeSymbol target, ExpressionSyntax expression, ref List<string> comments)
+        private static ExpressionSyntax GetExpressionSyntax(
+            SyntaxGenerator syntaxGenerator,
+            ITypeSymbol source,
+            ITypeSymbol target,
+            ExpressionSyntax expression,
+            ref List<MethodDeclarationSyntax> otherMethods,
+            ref List<string> comments)
         {
             //If both target and source are collections then start mapping the collection.
             if (target.IsCollection() && source.IsCollection())
             {
-                return CreateCollectionMappingExpression(syntaxGenerator, source, target, expression, ref comments);
+                return CreateCollectionMappingExpression(
+                    syntaxGenerator,
+                    source,
+                    target,
+                    expression,
+                    ref otherMethods,
+                    ref comments);
             }
 
             var sourceProperties = source.GetMembers().Where(x => !x.IsStatic && !x.IsImplicitlyDeclared && x is IPropertySymbol && x.DeclaredAccessibility == Accessibility.Public).Cast<IPropertySymbol>().ToList();
@@ -273,7 +317,14 @@
 
                     if (foundConstructorParams != null)
                     {
-                        return TryToMapWithConstructor(syntaxGenerator, namedType, foundConstructorParams.ToList(), sourceProperties, expression, ref comments);
+                        return TryToMapWithConstructor(
+                            syntaxGenerator,
+                            namedType,
+                            foundConstructorParams.ToList(),
+                            sourceProperties,
+                            expression,
+                            ref otherMethods,
+                            ref comments);
                     }
                 }
 
@@ -308,17 +359,61 @@
                         //Check if you are mapping a complex or simple type. Complex objects need an initializer so call the method in recursion
                         if (matchedProp.Type.IsSimpleType() && targetProperty.Type.IsSimpleType())
                         {
-                            //Create the assignment So (Target) Property = source.Property
-                            results.Add(
-                                SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
-                                    SyntaxFactory.IdentifierName(targetProperty.Name),
-                                    memberAccessExpression
-                                ));
+                            //If both target and source are enums then create a mapping for the enum.
+                            //Store this as an extra method.
+                            if (targetProperty.Type.IsEnum() && matchedProp.Type.IsEnum())
+                            {
+                                var mappingMethodName = $"Map{matchedProp.Type.Name}";
+                                var statement = CreateEnumSwitchStatementMapping(matchedProp.Type, targetProperty.Type, matchedProp.Name.ToLower()).Root;
+                                var method = SyntaxFactory.MethodDeclaration(
+                                    SyntaxFactory.IdentifierName(targetProperty.Type.Name),
+                                    SyntaxFactory.Identifier(mappingMethodName))
+                                    .WithModifiers(SyntaxFactory.TokenList(new[]
+                                    {
+                                        SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+                                        SyntaxFactory.Token(SyntaxKind.StaticKeyword)
+                                    }))
+                                    .WithParameterList(SyntaxFactory.ParameterList(
+                                        SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Parameter(
+                                            SyntaxFactory.Identifier(matchedProp.Name.ToLower()))
+                                        .WithType(SyntaxFactory.IdentifierName(matchedProp.Type.Name)))))
+                                    .WithBody(SyntaxFactory.Block(statement));
+
+                                var t = method.ToFullString();
+
+                                otherMethods.Add(method); 
+                                var invocation = ((InvocationExpressionSyntax)syntaxGenerator
+                                    .InvocationExpression(syntaxGenerator.IdentifierName(mappingMethodName)))
+                                    .WithArgumentList(SyntaxFactory.ArgumentList(
+                                        SyntaxFactory.SingletonSeparatedList(
+                                            SyntaxFactory.Argument(memberAccessExpression))));
+
+                                results.Add(
+                                    SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                                        SyntaxFactory.IdentifierName(targetProperty.Name),
+                                        invocation
+                                    ));
+                            }
+                            else
+                            {
+                                //Create the assignment So (Target) Property = source.Property
+                                results.Add(
+                                    SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                                        SyntaxFactory.IdentifierName(targetProperty.Name),
+                                        memberAccessExpression
+                                    ));
+                            }
                         }
                         else
                         {
                             //Get the complex object for example: new TargetChild { Property = source.PropertyChild.Property }
-                            var syntax = GetExpressionSyntax(syntaxGenerator, matchedProp.Type, targetProperty.Type, memberAccessExpression, ref comments);
+                            var syntax = GetExpressionSyntax(
+                                syntaxGenerator,
+                                matchedProp.Type,
+                                targetProperty.Type,
+                                memberAccessExpression,
+                                ref otherMethods,
+                                ref comments);
                             //Create the assignment so (Target) PropertyChild = new TargetChild { Property = source.PropertyChild.Property }
                             results.Add(
                                 SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
@@ -347,6 +442,7 @@
             List<IParameterSymbol> foundConstructorParams,
             List<IPropertySymbol> sourceProperties,
             ExpressionSyntax expressionSyntax,
+            ref List<MethodDeclarationSyntax> otherMethods,
             ref List<string> comments)
         {
             var createExpression = GetCreateNewObjectSyntax(syntaxGenerator, target);
@@ -355,7 +451,13 @@
             {
                 var matchedProp = sourceProperties.First(x => constructorParam.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
 
-                var node = GetExpressionSyntax(syntaxGenerator, matchedProp.Type, constructorParam.Type, (ExpressionSyntax)syntaxGenerator.MemberAccessExpression(expressionSyntax, matchedProp.Name), ref comments);
+                var node = GetExpressionSyntax(
+                    syntaxGenerator,
+                    matchedProp.Type,
+                    constructorParam.Type,
+                    (ExpressionSyntax)syntaxGenerator.MemberAccessExpression(expressionSyntax, matchedProp.Name),
+                    ref otherMethods,
+                    ref comments);
                 constructorArguments = constructorArguments.AddArguments(SyntaxFactory.Argument(node));
             }
 
@@ -386,8 +488,13 @@
                         SyntaxFactory.Argument(nameOfArgument))));
         }
 
-        private static ExpressionSyntax CreateCollectionMappingExpression(SyntaxGenerator syntaxGenerator, ITypeSymbol source,
-            ITypeSymbol target, ExpressionSyntax expression, ref List<string> comments)
+        private static ExpressionSyntax CreateCollectionMappingExpression(
+            SyntaxGenerator syntaxGenerator,
+            ITypeSymbol source,
+            ITypeSymbol target,
+            ExpressionSyntax expression,
+            ref List<MethodDeclarationSyntax> otherMethods,
+            ref List<string> comments)
         {
             //Get the generic type
             var targetGenericType = target.GetCollectionGenericType();
@@ -402,8 +509,13 @@
             var lambdaName = $"{sourceGenericType.Name.ToLower()}Item";
             var expressionSyntaxForLambdaName = SyntaxFactory.IdentifierName(lambdaName);
             //Get the mapping from the generic type
-            var mappingExpression = GetExpressionSyntax(syntaxGenerator, sourceGenericType, targetGenericType,
-                expressionSyntaxForLambdaName, ref comments);
+            var mappingExpression = GetExpressionSyntax(
+                syntaxGenerator,
+                sourceGenericType,
+                targetGenericType,
+                expressionSyntaxForLambdaName,
+                ref otherMethods,
+                ref comments);
 
             var valueReturningLambdaExpression =
                 (ExpressionSyntax)syntaxGenerator.ValueReturningLambdaExpression(lambdaName, mappingExpression);
