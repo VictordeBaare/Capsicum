@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Capsicum", "Capsicum\Capsicum.csproj", "{24118869-4A3D-410E-89B6-E2A3CABC89CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoMapCodeRefactoring", "AutoMapCodeRefactoring\AutoMapCodeRefactoring.csproj", "{AED6B40B-7980-465A-97C6-65698BA3756F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoMapCodeRefactoring", "AutoMapCodeRefactoring\AutoMapCodeRefactoring.csproj", "{AED6B40B-7980-465A-97C6-65698BA3756F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoMapCodeRefactoringTests", "AutoMapCodeRefactoringTests\AutoMapCodeRefactoringTests.csproj", "{47D4C283-77A8-4418-A1FB-22036BB887C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoMapCodeRefactoringTests", "AutoMapCodeRefactoringTests\AutoMapCodeRefactoringTests.csproj", "{47D4C283-77A8-4418-A1FB-22036BB887C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,14 +15,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Debug|x86.ActiveCfg = Debug|x86
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Debug|x86.Build.0 = Debug|x86
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Release|x86.ActiveCfg = Release|x86
-		{24118869-4A3D-410E-89B6-E2A3CABC89CC}.Release|x86.Build.0 = Release|x86
 		{AED6B40B-7980-465A-97C6-65698BA3756F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AED6B40B-7980-465A-97C6-65698BA3756F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AED6B40B-7980-465A-97C6-65698BA3756F}.Debug|x86.ActiveCfg = Debug|Any CPU
