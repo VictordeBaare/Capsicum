@@ -40,4 +40,4 @@ jobs:
         # The path to publish manifest file
         publish-manifest-file: Capsicum/publishManifest.json
         # The publisher access token
-        personal-access-code: ${{ secrets.VS_PUBLISHER_ACCESS_TOKEN }}
+        personal-access-code: ${{ secrets.VISUALSTUDIO_PUBLISHER_ACCESS_TOKEN }}
