@@ -25,12 +25,6 @@ jobs:
         with:
           version: ${{ env.version }}
 
-      - name: Update Vsix Version (VS2022)
-        uses: cezarypiatek/VsixVersionAction@1.0
-        with:
-          version: ${{ env.version }}
-          vsix-manifest-file: 'publishManifest.json'
-
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.0.2
 
@@ -49,7 +43,7 @@ jobs:
           path: |
             **\*.vsix
             publishManifest.json
-            readme.md
+            overview.md
   release:
     name: Release
     needs: build
