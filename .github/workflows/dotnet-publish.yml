@@ -36,7 +36,7 @@ jobs:
       uses: cezarypiatek/VsixPublisherAction@0.1
       with:
         # The path to VSIX file
-        extension-file: Capsicum\Capsicum\Capsicum\Capsicum.Vsix\bin\Release\net472\Capsicum.Vsix
+        extension-file: Capsicum\Capsicum\Capsicum.Vsix\bin\Release\net472\Capsicum.Vsix.vsix
         # The path to publish manifest file
         publish-manifest-file: Capsicum/publishManifest.json
         # The publisher access token
