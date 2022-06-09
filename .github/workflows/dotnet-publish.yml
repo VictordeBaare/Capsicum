@@ -56,6 +56,6 @@ jobs:
       - name: Publish to Marketplace - VS2022
         uses: cezarypiatek/VsixPublisherAction@0.1
         with:
-          extension-file: Capsicum\Capsicum\Capsicum\Capsicum.Vsix\bin\Release\net472\Capsicum.Vsix.vsix
+          extension-file: Capsicum\Capsicum\Capsicum\bin\Release\net472\Capsicum.Vsix.vsix
           publish-manifest-file: SCapsicum/publishManifest.json
           personal-access-code: ${{ secrets.VISUALSTUDIO_PUBLISHER_ACCESS_TOKEN }}
