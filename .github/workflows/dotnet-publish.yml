@@ -59,7 +59,7 @@ jobs:
         uses: Amadevus/pwsh-script@v2.0.1
         with:
           # PowerShell script to execute in Actions-hydrated context
-          script: Get-ChildItem –Recurse
+          script: Get-ChildItem -Path D:\a\Capsicum\Capsicum\Capsicum\*.vsix –Recurse
 
       - name: Publish to Marketplace - VS2022
         uses: cezarypiatek/VsixPublisherAction@0.1
